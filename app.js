@@ -113,7 +113,7 @@ if (navigator.mediaDevices.getUserMedia) {
 				if (dev[i].kind == 'audioinput' && dev[i].deviceId !== 'default') {
 					audioSelect['value'] = dev[i].deviceId;
 
-					var chunks      = [];
+					var chunks      = [[], []];
 					var constraints = { 
 						audio: {
 							deviceId: {
@@ -125,7 +125,7 @@ if (navigator.mediaDevices.getUserMedia) {
 					navigator.mediaDevices.getUserMedia(constraints).then(
 						function (stream) {
 							count++;
-							onSuccess (stream, chunks, count);
+							onSuccess (stream, chunks[count -1], count);
 						},
 						function (err) {
 							onError (err);
