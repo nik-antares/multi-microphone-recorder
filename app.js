@@ -18,7 +18,26 @@ if (navigator.mediaDevices.getUserMedia) {
 	let chunks_array   = [];
 
 	var onSuccess = function(stream) {
-		mediaRecorders.push (new MediaRecorder(stream));
+		var ac       = new AudioContext();
+		var source   = ac.createMediaStreamSource(stream);
+		var splitter = ac.createChannelSplitter(2);
+
+		source.connect(splitter);
+
+		var merger1 = ac.createChannelMerger(2);
+		var merger2 = ac.createChannelMerger(2);
+
+		splitter.connect(merger1, 0, 0);
+		splitter.connect(merger2, 1, 1);
+
+		var dest1 = ac.createMediaStreamDestination();
+		var dest2 = ac.createMediaStreamDestination();
+
+		merger1.connect(dest1);
+		merger2.connect(dest2);
+
+		mediaRecorders.push (new MediaRecorder(dest1.stream));
+		mediaRecorders.push (new MediaRecorder(dest2.stream));
 
 		record.onclick = function() {
 			mediaRecorders.forEach ((mediaRecorder) => { 
