@@ -17,119 +17,131 @@ if (navigator.mediaDevices.getUserMedia) {
 	let mediaRecorders = [];
 	let chunks_array   = [];
 
-	var onSuccess = function(stream) {
+	/*	var onSuccess = function(stream) {
 		var ac       = new AudioContext();
 		var source   = ac.createMediaStreamSource(stream);
-		var splitter = ac.createChannelSplitter(2);
+		*/
+	function onSuccess (arrayBuffer) {
+		var ac = new AudioContext();
 
-		source.connect(splitter);
+		ac.decodeAudioData(arrayBuffer, function(data) {
+			var source = ac.createBufferSource();
+			source.buffer = data;
 
-		var merger1 = ac.createChannelMerger(2);
-		var merger2 = ac.createChannelMerger(2);
 
-		splitter.connect(merger1, 0, 0);
-		splitter.connect(merger2, 1, 1);
+			var splitter = ac.createChannelSplitter(2);
 
-		var dest1 = ac.createMediaStreamDestination();
-		var dest2 = ac.createMediaStreamDestination();
+			source.connect(splitter);
 
-		merger1.connect(dest1);
-		merger2.connect(dest2);
+			var merger1 = ac.createChannelMerger(2);
+			var merger2 = ac.createChannelMerger(2);
 
-		mediaRecorders.push (new MediaRecorder(dest1.stream));
-		mediaRecorders.push (new MediaRecorder(dest2.stream));
+			splitter.connect(merger1, 0, 0);
+			splitter.connect(merger2, 1, 1);
 
-		record.onclick = function() {
-			mediaRecorders.forEach ((mediaRecorder) => { 
-				mediaRecorder.start(); 
+			var dest1 = ac.createMediaStreamDestination();
+			var dest2 = ac.createMediaStreamDestination();
 
-				console.log(mediaRecorder.state);
-			});
+			merger1.connect(dest1);
+			merger2.connect(dest2);
 
-			console.log("recorder started");
+			mediaRecorders.push (new MediaRecorder(dest1.stream));
+			mediaRecorders.push (new MediaRecorder(dest2.stream));
 
-			record.style.background = "red";
+			record.onclick = function() {
+				mediaRecorders.forEach ((mediaRecorder) => { 
+					mediaRecorder.start(); 
 
-			stop.disabled   = false;
-			record.disabled = true;
-		}
+					console.log(mediaRecorder.state);
+				});
 
-		stop.onclick = function() {
-			mediaRecorders.forEach ((mediaRecorder) => { 
-				mediaRecorder.stop();
+				console.log("recorder started");
 
-				console.log(mediaRecorder.state);
-			});
+				record.style.background = "red";
 
-			console.log("recorder stopped");
+				stop.disabled   = false;
+				record.disabled = true;
+			}
 
-			record.style.background = "";
-			record.style.color = "";
-			// mediaRecorder.requestData();
+			stop.onclick = function() {
+				mediaRecorders.forEach ((mediaRecorder) => { 
+					mediaRecorder.stop();
 
-			stop.disabled   = true;
-			record.disabled = false;
-		}
+					console.log(mediaRecorder.state);
+				});
 
-		mediaRecorders.forEach ((mediaRecorder, index) => {
-			mediaRecorder.onstop = function(e) {
-				console.log("data available after MediaRecorder.stop() called.");
-
-				var clipName = prompt('Enter a name for your sound clip?','My unnamed clip');
-
-				console.log(clipName);
-
-				var clipContainer = document.createElement('article');
-				var clipLabel     = document.createElement('p');
-				var audio         = document.createElement('audio');
-				var deleteButton  = document.createElement('button');
-
-				clipContainer.classList.add('clip');
-				audio.setAttribute('controls', '');
-				deleteButton.textContent = 'Delete';
-				deleteButton.className = 'delete';
-
-				if (clipName === null)
-					clipLabel.textContent = 'My unnamed clip';
-				else
-					clipLabel.textContent = clipName;
-
-				clipContainer.appendChild(audio);
-				clipContainer.appendChild(clipLabel);
-				clipContainer.appendChild(deleteButton);
-				soundClips.appendChild(clipContainer);
-
-				audio.controls = true;
-				var blob = new Blob(chunks_array[index], { 'type' : 'audio/ogg; codecs=opus' });
-
-				chunks_array[index] = [];
-
-				var audioURL = window.URL.createObjectURL(blob);
-				audio.src = audioURL;
 				console.log("recorder stopped");
 
-				deleteButton.onclick = function(e) {
-					evtTgt = e.target;
-					evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
-				}
+				record.style.background = "";
+				record.style.color = "";
+				// mediaRecorder.requestData();
 
-				clipLabel.onclick = function() {
-					var existingName = clipLabel.textContent;
-					var newClipName = prompt('Enter a new name for your sound clip?');
-					if(newClipName === null) {
-						clipLabel.textContent = existingName;
-					} else {
-						clipLabel.textContent = newClipName;
+				stop.disabled   = true;
+				record.disabled = false;
+			}
+
+			mediaRecorders.forEach ((mediaRecorder, index) => {
+				mediaRecorder.onstop = function(e) {
+					console.log("data available after MediaRecorder.stop() called.");
+
+					var clipName = prompt('Enter a name for your sound clip?','My unnamed clip');
+
+					console.log(clipName);
+
+					var clipContainer = document.createElement('article');
+					var clipLabel     = document.createElement('p');
+					var audio         = document.createElement('audio');
+					var deleteButton  = document.createElement('button');
+
+					clipContainer.classList.add('clip');
+					audio.setAttribute('controls', '');
+					deleteButton.textContent = 'Delete';
+					deleteButton.className = 'delete';
+
+					if (clipName === null)
+						clipLabel.textContent = 'My unnamed clip';
+					else
+						clipLabel.textContent = clipName;
+
+					clipContainer.appendChild(audio);
+					clipContainer.appendChild(clipLabel);
+					clipContainer.appendChild(deleteButton);
+					soundClips.appendChild(clipContainer);
+
+					audio.controls = true;
+
+					var blob = new Blob(chunks_array[index], { 'type' : 'audio/wav; codecs=opus' });
+
+					//	chunks_array[index] = [];
+
+					console.log ('==============', blob)
+					var audioURL = window.URL.createObjectURL(blob);
+					audio.src = audioURL;
+					console.log("recorder stopped");
+
+					deleteButton.onclick = function(e) {
+						evtTgt = e.target;
+						evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
+					}
+
+					clipLabel.onclick = function() {
+						var existingName = clipLabel.textContent;
+						var newClipName = prompt('Enter a new name for your sound clip?');
+						if(newClipName === null) {
+							clipLabel.textContent = existingName;
+						} else {
+							clipLabel.textContent = newClipName;
+						}
 					}
 				}
-			}
-		});
+			});
 
-		mediaRecorders.forEach ((mediaRecorder, index) => {
-			mediaRecorder.ondataavailable = function(e) {
-				chunks_array[index] = [];
-				chunks_array[index].push(e.data);
-			}
+			mediaRecorders.forEach ((mediaRecorder, index) => {
+				mediaRecorder.ondataavailable = function(e) {
+					chunks_array[index] = [];
+					chunks_array[index].push(e.data);
+				}
+			});
 		});
 	}
 
@@ -137,7 +149,25 @@ if (navigator.mediaDevices.getUserMedia) {
 		console.log('The following error occured: ' + err);
 	}
 
-	navigator.mediaDevices.enumerateDevices().then(
+
+	document.getElementById('audio').addEventListener('change', (evt) => {
+		var files = evt.target.files;
+
+		for (var i = 0, f; f = files[i]; i++) {
+			var reader = new FileReader();
+
+			reader.onload = function(e) {
+				var arrayBuffer = reader.result;
+
+				onSuccess (arrayBuffer);
+			}
+
+			reader.readAsArrayBuffer(f);
+		}
+	}, false);
+
+
+	/*	navigator.mediaDevices.enumerateDevices().then(
 		function (dev) {
 			for (let i = 0; i < dev.length; i++) {
 				if (dev[i].kind == 'audioinput' && dev[i].deviceId !== 'default') {
@@ -149,7 +179,7 @@ if (navigator.mediaDevices.getUserMedia) {
 					navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
 				}
 			}
-		});
+		});*/
 
 } else {
 	console.log('getUserMedia not supported on your browser!');
