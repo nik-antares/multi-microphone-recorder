@@ -100,7 +100,7 @@ if (navigator.mediaDevices.getUserMedia) {
 				soundClips.appendChild(clipContainer);
 
 				audio.controls = true;
-				var blob = new Blob(chunks_array[index], { 'type' : 'audio/ogg; codecs=opus' });
+				var blob = new Blob(chunks_array[index], { 'type' : 'audio/wav; codecs=opus' });
 
 				chunks_array[index] = [];
 
@@ -143,7 +143,10 @@ if (navigator.mediaDevices.getUserMedia) {
 				if (dev[i].kind == 'audioinput' && dev[i].deviceId !== 'default') {
 					let deviceId    = dev[i].deviceId;
 					let constraints = { 
-						audio: { deviceId }
+						audio: { 
+							deviceId,
+							channelCount: 2
+						}
 					};
 
 					navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
